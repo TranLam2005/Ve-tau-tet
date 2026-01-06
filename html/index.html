@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo - upload</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.9.0/axios.min.js" integrity="sha512-FPlUpimug7gt7Hn7swE8N2pHw/+oQMq/+R/hH/2hZ43VOQ+Kjh25rQzuLyPz7aUWKlRpI7wXbY6+U3oFPGjPOA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <h1>Upload large file</h1>
+  <input type="file" id="fileInput" multiple />
+  <script>
+    const fileInput = document.querySelector('#fileInput');
+    // set chunkSize
+    const chunkSize = 75 * 1024; // 75KB
+    // store chunk promise
+    const chunkPromise = [];
+    // change file
+    fileInput.onchange = async function() {
+      // file[0]
+      const file = fileInput.files[0], chunks = [];
+      let startPos = 0;
+      while(startPos < file.size) {
+        chunks.push(file.slice(startPos, startPos + chunkSize));
+        startPos += chunkSize;
+      }
+      if (!chunks.length) {
+        return;
+      }
+      chunks.map((ck, idx) => {
+        const data = new FormData();
+        data.set('name', file.name + '-' + idx);
+        data.append('files', ck);
+        chunkPromise.push(axios.post('http://localhost:3000/user/upload/large-file', data));
+      });
+      await Promise.all(chunkPromise);
+      const rs = await axios.get(`http://localhost:3000/user/merge/file?file=${file.name}`);
+      console.log('link FULL | ', rs);
+    }
+  </script>
+</body>
+</html>
