@@ -28,29 +28,44 @@ import type { Response } from 'express';
 export class UserController {
   constructor(private readonly userService: UserService) {}
   @Get('merge/file')
-  mergeFile(@Query('file') fileName: string, @Res() res: Response) {
+  async mergeFile(@Query('file') fileName: string, @Res() res: Response) {
     const nameDir = 'uploads/chunks-' + fileName;
+    const mergeDir = 'uploads/merge';
+    const mergePath = mergeDir + '/' + fileName;
+
+    // ensure merge dir exists
+    if (!fs.existsSync(mergeDir)) {
+      fs.mkdirSync(mergeDir, { recursive: true });
+    }
+
+    // Create an empty file before (required for flags: 'r+')
+    fs.writeFileSync(mergePath, '');
+
     const files = fs.readdirSync(nameDir);
-    let startPos = 0,
-      countFile = 0;
-    files.map((file) => {
+    let startPos = 0;
+    files.sort((a, b) => {
+      const numA = parseInt(a.match(/-(\d+)$/)?.[1] ?? '0');
+      const numB = parseInt(b.match(/-(\d+)$/)?.[1] ?? '0');
+      return numA - numB;
+    });
+    for (const file of files) {
       const filePath = nameDir + '/' + file;
       console.log('filePath | ', filePath);
       const streamFile = fs.createReadStream(filePath);
-      streamFile
-        .pipe(
-          fs.createWriteStream('uploads/merge' + '/' + fileName, {
-            start: startPos,
-          }),
-        )
-        .on('finish', () => {
-          countFile++;
-          if (countFile === files.length) {
-            fs.rmSync(nameDir, { recursive: true });
-          }
-        });
+      await new Promise<void>((resolve, reject) => {
+        streamFile
+          .pipe(
+            fs.createWriteStream(mergePath, {
+              flags: 'r+', // Keep old content, do not delete
+              start: startPos,
+            }),
+          )
+          .on('finish', resolve)
+          .on('error', reject);
+      });
       startPos += fs.statSync(filePath).size;
-    });
+    }
+    fs.rmSync(nameDir, { recursive: true });
     return res.json({
       link: 'http://localhost:3000/uploads/merge/' + fileName,
       fileName,
