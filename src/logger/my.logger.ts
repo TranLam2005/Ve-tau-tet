@@ -1,26 +1,25 @@
-import { LoggerService, LogLevel } from "@nestjs/common";
+import { LoggerService, LogLevel } from '@nestjs/common';
 
 export class MyLogger implements LoggerService {
-  log(message: any, ...optionalParams: any[]) {
-    throw new Error("Method not implemented.");
+  log(message: string, context?: string) {
+    console.log(`***LOG*** [${context}] | `, message);
   }
-  error(message: any, ...optionalParams: any[]) {
-    throw new Error("Method not implemented.");
+  error(message: string, context?: string) {
+    console.log(`***ERROR*** [${context}] | `, message);
   }
-  warn(message: any, ...optionalParams: any[]) {
-    throw new Error("Method not implemented.");
+  warn(message: string, context?: string) {
+    console.log(`***WARN*** [${context}] | `, message);
   }
-  debug?(message: any, ...optionalParams: any[]) {
-    throw new Error("Method not implemented.");
+  debug?(message: string, context?: string) {
+    console.log(`***DEBUG*** [${context}] | `, message);
   }
-  verbose?(message: any, ...optionalParams: any[]) {
-    throw new Error("Method not implemented.");
+  verbose?(message: string, context?: string) {
+    console.log(`***VERBOSE*** [${context}] | `, message);
   }
-  fatal?(message: any, ...optionalParams: any[]) {
-    throw new Error("Method not implemented.");
+  fatal?(message: string, context?: string) {
+    console.log(`***FATAL*** [${context}] | `, message);
   }
   setLogLevels?(levels: LogLevel[]) {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
-  
 }
